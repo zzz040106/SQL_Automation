@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Data Analyst</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --line: #e4e7ec;
+      --line-strong: #cfd6df;
+      --text: #101828;
+      --muted: #667085;
+      --soft: #f9fafb;
+      --primary: #0f766e;
+      --primary-weak: #e7f5f2;
+      --blue: #2563eb;
+      --warn: #d97706;
+      --danger: #dc2626;
+      --ok: #16a34a;
+      --code: #0f172a;
+      --shadow: 0 10px 28px rgba(15, 23, 42, .06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+    }
+    button, input, textarea, select { font: inherit; }
+    button {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      min-height: 36px;
+      padding: 0 12px;
+      cursor: pointer;
+      color: var(--text);
+    }
+    button:hover:not(:disabled) { border-color: var(--line-strong); background: var(--soft); }
+    button:disabled { opacity: .48; cursor: not-allowed; }
+    .primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
+    .primary:hover:not(:disabled) { background: #0d655f; border-color: #0d655f; }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 8px 10px;
+      background: #fff;
+      color: var(--text);
+    }
+    textarea { min-height: 108px; resize: vertical; }
+    label { display: grid; gap: 6px; font-size: 12px; color: #344054; font-weight: 650; }
+    .top {
+      height: 50px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand { display: flex; align-items: center; gap: 9px; font-weight: 850; }
+    .mark {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+      white-space: nowrap;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+    .status-dot.ok { background: var(--ok); }
+    .status-dot.err { background: var(--danger); }
+    .spacer { flex: 1; }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(520px, 1fr) 340px;
+      gap: 12px;
+      padding: 12px;
+      align-items: start;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .section { padding: 14px; }
+    .section + .section { border-top: 1px solid var(--line); }
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 820;
+    }
+    .hint { color: var(--muted); font-size: 12px; font-weight: 500; }
+    .grid { display: grid; gap: 10px; }
+    .two { display: grid; grid-template-columns: 1fr 92px; gap: 8px; }
+    .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .question-row { display: grid; grid-template-columns: 1fr 88px; gap: 10px; align-items: end; }
+    .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .card { border: 1px solid var(--line); border-radius: 8px; background: #fbfcfd; padding: 10px; min-width: 0; }
+    .label { color: var(--muted); font-size: 12px; }
+    .value { font-weight: 820; margin-top: 5px; overflow-wrap: anywhere; }
+    .code { background: var(--code); color: #dbeafe; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+    .codebar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding: 8px 10px; color: #94a3b8; font-size: 12px; }
+    .codebar button { min-height: 28px; color: #dbeafe; border-color: #23324a; background: #111c31; }
+    pre { margin: 0; padding: 14px; white-space: pre-wrap; overflow: auto; font-family: Consolas, "Cascadia Mono", monospace; font-size: 12px; line-height: 1.65; }
+    .strip {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid rgba(217,119,6,.28);
+      background: #fffbeb;
+      color: #92400e;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .strip.ok { border-color: rgba(22,163,74,.25); background: #f0fdf4; color: #166534; }
+    .strip.err { border-color: rgba(220,38,38,.25); background: #fef2f2; color: #991b1b; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px; text-align: left; white-space: nowrap; }
+    th { background: #f9fafb; color: #475467; font-weight: 750; }
+    tr[data-table] { cursor: pointer; }
+    tr[data-table]:hover td { background: var(--primary-weak); }
+    .scroll { overflow: auto; max-height: 330px; border: 1px solid var(--line); border-radius: 8px; }
+    .schema-search { margin-bottom: 8px; }
+    .result { display: grid; grid-template-columns: 1.15fr .85fr; gap: 12px; }
+    .empty {
+      min-height: 178px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 20px;
+      background: #fff;
+    }
+    .list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .list li { border: 1px solid var(--line); border-radius: 8px; background: #fbfcfd; padding: 9px; color: #344054; font-size: 12px; line-height: 1.55; }
+    .history { display: grid; gap: 6px; }
+    .history button { text-align: left; overflow: hidden; display: grid; gap: 3px; height: auto; min-height: 42px; padding: 7px 10px; }
+    .history strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .history span { color: var(--muted); font-size: 11px; }
+    .exports { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,.42); display: grid; place-items: center; padding: 18px; z-index: 20; }
+    .modal-bg[hidden] { display: none; }
+    .modal { width: min(880px,100%); max-height: min(820px, 92vh); overflow: hidden; background: #fff; border-radius: 8px; border: 1px solid var(--line); box-shadow: 0 24px 64px rgba(15, 23, 42, .24); display: grid; grid-template-rows: 50px 1fr; }
+    .modal-head { padding: 0 14px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; font-weight: 820; }
+    .modal-body { padding: 14px; display: grid; gap: 12px; overflow: auto; }
+    .import-grid { display: grid; grid-template-columns: 260px 1fr; gap: 12px; align-items: start; }
+    .file-list { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .file-list div { padding: 9px 10px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+    .file-list div:last-child { border-bottom: 0; }
+    .tooltip { position: fixed; z-index: 50; background: #111827; color: #fff; padding: 7px 9px; border-radius: 7px; font-size: 12px; pointer-events: none; transform: translate(10px,-28px); }
+    svg { width: 100%; height: 260px; }
+    .chartbox { border: 1px solid var(--line); border-radius: 8px; background: #fbfcfd; padding: 12px; min-width: 0; }
+    .line { fill: none; stroke: var(--primary); stroke-width: 3; }
+    .point { fill: #fff; stroke: var(--primary); stroke-width: 2; }
+    .bar { fill: var(--primary); }
+    .axis-line { stroke: #98a2b3; stroke-width: 1.2; }
+    .grid-line { stroke: #e4e7ec; stroke-width: 1; }
+    .tick-line { stroke: #98a2b3; stroke-width: 1; }
+    .axis-label { fill: #667085; font-size: 10px; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; }
+    @media (max-width: 1120px) {
+      .layout { grid-template-columns: 280px 1fr; }
+      .right-panel { grid-column: 1 / -1; }
+    }
+    @media (max-width: 840px) {
+      .top { overflow-x: auto; }
+      .layout, .question-row, .result, .import-grid { display: block; }
+      .panel, .question-row > button, .import-grid > * { margin-bottom: 12px; }
+      .cards, .exports { grid-template-columns: 1fr; }
+      .two { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand"><span class="mark">▥</span>AI Data Analyst</div>
+    <span id="connText" class="pill"><span class="status-dot"></span>未连接</span>
+    <span id="dbText" class="pill"><span class="status-dot"></span>数据库未配置</span>
+    <span id="modelText" class="pill"><span class="status-dot"></span>DeepSeek 未配置</span>
+    <div class="spacer"></div>
+    <button id="settingsBtn" title="设置">设置</button>
+  </div>
+
+  <div class="layout">
+    <aside class="panel">
+      <section class="section">
+        <div class="head">MySQL 连接 <span class="hint">本地/远程均可</span></div>
+        <div class="grid">
+          <label>Host<input id="host" value="127.0.0.1"></label>
+          <div class="two">
+            <label>Database<input id="database" placeholder="数据库名"></label>
+            <label>Port<input id="port" placeholder="3306"></label>
+          </div>
+          <label>User<input id="user" value="root"></label>
+          <label>Password<input id="password" type="password"></label>
+          <button id="connectBtn" class="primary">读取 Schema</button>
+          <button id="importBtn">导入数据</button>
+        </div>
+      </section>
+      <section class="section">
+        <div class="head">Schema 预览 <span id="schemaCount" class="hint">0 张表</span></div>
+        <input id="schemaFilter" class="schema-search" placeholder="搜索表或字段">
+        <div class="scroll">
+          <table>
+            <thead><tr><th>表名</th><th>字段</th><th>行数</th></tr></thead>
+            <tbody id="schemaBody"><tr><td colspan="3" class="hint">连接后显示表结构。</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="section">
+        <div class="head">历史记录</div>
+        <div id="history" class="history"></div>
+      </section>
+    </aside>
+
+    <main class="grid">
+      <section class="panel section">
+        <div class="head">业务问题 <span class="hint">自然语言输入</span></div>
+        <div class="question-row">
+          <textarea id="question" placeholder="例如：美国客户消费金额排名前 20 是谁？"></textarea>
+          <button id="analyzeBtn" class="primary">分析</button>
+        </div>
+      </section>
+      <section class="panel section">
+        <div class="head">分类与 SQL <button id="regenBtn" disabled>重新生成</button></div>
+        <div id="classification" class="cards"></div>
+        <div class="code">
+          <div class="codebar"><span>MySQL</span><button id="copyBtn" disabled>复制</button></div>
+          <pre id="sqlCode">-- 连接数据库后输入业务问题，系统会生成安全 SQL。</pre>
+        </div>
+      </section>
+      <section class="panel section">
+        <div id="review" class="strip"><span class="status-dot"></span><span>等待 SQL 安全审核。</span></div>
+        <div class="head">查询结果 <button id="executeBtn" class="primary" disabled>执行查询</button></div>
+        <div id="result" class="empty">执行通过审核的 SQL 后，这里会显示表格和图表。</div>
+      </section>
+    </main>
+
+    <aside class="panel right-panel">
+      <section class="section">
+        <div class="head">数据质量</div>
+        <ul id="quality" class="list"><li>等待查询结果。</li></ul>
+      </section>
+      <section class="section">
+        <div class="head">分析摘要</div>
+        <ul id="summary" class="list"><li>生成 SQL 并执行后，将输出业务分析和建议。</li></ul>
+      </section>
+      <section class="section">
+        <div class="head">导出</div>
+        <div class="exports">
+          <button id="csvBtn" disabled>CSV</button>
+          <button id="xlsBtn" disabled>Excel</button>
+          <button id="htmlBtn" disabled>HTML</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <div id="settings" class="modal-bg" hidden>
+    <div class="modal">
+      <div class="modal-head">运行配置 <button id="closeSettings">关闭</button></div>
+      <div class="modal-body">
+        <div class="strip">不输入 API Key 时使用本地规则预览；输入 API Key 后会调用 DeepSeek。</div>
+        <label>DeepSeek API Key<input id="apiKey" type="password"></label>
+        <label>Base URL<input id="apiBase" value="https://api.deepseek.com"></label>
+        <label>Model<input id="apiModel" value="deepseek-chat"></label>
+        <label>运行模式<input id="runMode" value="无 API Key：本地规则预览" readonly></label>
+        <button id="saveSettings" class="primary">保存配置</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="detail" class="modal-bg" hidden>
+    <div class="modal">
+      <div class="modal-head"><span id="detailTitle">表详情</span><button id="closeDetail">关闭</button></div>
+      <div id="detailBody" class="modal-body"><div class="empty">选择表后显示详情。</div></div>
+    </div>
+  </div>
+
+  <div id="importModal" class="modal-bg" hidden>
+    <div class="modal">
+      <div class="modal-head">导入数据 <button id="closeImport">关闭</button></div>
+      <div class="modal-body">
+        <div class="strip">支持导入单个 SQL 文件，也可以一次选择多个 SQL 文件导入整库表结构和数据。多文件会按文件名顺序执行，请先确认目标 Database 配置正确。</div>
+        <div class="import-grid">
+          <div class="grid">
+            <label>导入方式<select id="importMode"><option value="single">单个 SQL 文件</option><option value="database">一次性导入数据库所有表的数据</option></select></label>
+            <label>SQL 文件<input id="sqlFiles" type="file" accept=".sql" multiple></label>
+            <button id="runImport" class="primary" disabled>开始导入</button>
+          </div>
+          <div class="grid">
+            <div id="fileInfo" class="hint">尚未选择 SQL 文件。</div>
+            <div id="importFiles" class="empty">选择 .sql 文件后，这里会显示待导入文件清单。</div>
+            <div id="importStatus" class="strip">等待导入。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tip" class="tooltip" hidden></div>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    let connected = false;
+    let latestSchema = { tables: [] };
+    let latestAnalysis = null;
+    let latestResult = { columns: [], rows: [] };
+    let latestSqlFiles = [];
+    let historyItems = normalizeHistory(JSON.parse(localStorage.getItem("ai-data-analyst-history") || "null")) || seedHistory();
+    let deepseek = JSON.parse(localStorage.getItem("ai-data-analyst-deepseek") || "null") || { apiKey: "", baseUrl: "https://api.deepseek.com", model: "deepseek-chat" };
+    deepseek.baseUrl = normalizeApiBase(deepseek.baseUrl);
+    deepseek.model = deepseek.model || "deepseek-chat";
+    const labels = {
+      trend_analysis: "趋势分析", ranking_analysis: "排名分析", comparison_analysis: "对比分析",
+      metric_query: "指标查询", detail_query: "明细查询", share_analysis: "占比分析",
+      anomaly_detection: "异常检测", forecast_analysis: "预测分析", segmentation_analysis: "分群分析",
+      attribution_analysis: "归因分析", data_operation: "非分析请求",
+      table_and_chart: "表格 + 图表", table: "表格", metric_card: "指标卡",
+      line_chart: "折线图", bar_chart: "柱状图", pie_chart: "饼图", none: "无", explanation: "说明"
+    };
+    const chartTexts = {
+      line_chart: "适合观察时间序列变化，鼠标悬停在折线点上可查看具体数值。",
+      bar_chart: "适合比较排名、分组和贡献差异，鼠标悬停在柱体上可查看具体数值。",
+      pie_chart: "适合占比结构，但当分类较多时建议改用条形图。",
+      none: "当前任务更适合表格或说明，不强行生成空白图表。"
+    };
+
+    function cn(v) { return labels[v] || v || "-"; }
+    function escapeHtml(v) {
+      return String(v ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+    function cfg() {
+      return { host: $("#host").value.trim(), port: $("#port").value.trim(), user: $("#user").value.trim(), password: $("#password").value, database: $("#database").value.trim() };
+    }
+    function normalizeApiBase(value) {
+      let base = String(value || "").trim() || "https://api.deepseek.com";
+      if (!/^https?:\/\//i.test(base)) base = "https://" + base;
+      base = base.replace(/\/+$/, "");
+      if (base.endsWith("/chat/completions")) base = base.slice(0, -"/chat/completions".length);
+      return base.replace(/\/+$/, "");
+    }
+    async function post(url, payload) {
+      const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const d = await r.json();
+      if (!r.ok || !d.ok) throw Error(d.message || "请求失败");
+      return d;
+    }
+    function setPill(el, text, kind) {
+      el.innerHTML = `<span class="status-dot ${kind || ""}"></span>${escapeHtml(text)}`;
+    }
+    function renderCards() {
+      $("#classification").innerHTML = [
+        ["分析类型", "等待分析"],
+        ["输出形式", "等待分析"],
+        ["图表建议", "暂无"],
+        ["执行状态", "未生成"]
+      ].map(([a, b]) => `<div class="card"><div class="label">${a}</div><div class="value">${b}</div></div>`).join("");
+    }
+    function seedHistory() {
+      return ["最近 30 天每天销售额趋势", "美国客户消费金额排名", "各地区订单量排名", "支付方式占比分析"].map(question => ({
+        question,
+        time: "",
+        status: "示例"
+      }));
+    }
+    function normalizeHistory(items) {
+      if (!Array.isArray(items)) return null;
+      return items.map(item => typeof item === "string" ? { question: item, time: "", status: "历史" } : item)
+        .filter(item => item && String(item.question || "").trim());
+    }
+    function hist() {
+      $("#history").innerHTML = historyItems.map(item => {
+        const meta = [item.status, item.time].filter(Boolean).join(" · ");
+        return `<button title="${escapeHtml(item.question)}"><strong>${escapeHtml(item.question)}</strong>${meta ? `<span>${escapeHtml(meta)}</span>` : ""}</button>`;
+      }).join("");
+    }
+    function addHist(q, status = "已记录") {
+      q = (q || "").trim();
+      if (!q) return;
+      const item = {
+        question: q,
+        status,
+        time: new Date().toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+      };
+      historyItems = [item, ...historyItems.filter(x => x.question !== q)].slice(0, 10);
+      localStorage.setItem("ai-data-analyst-history", JSON.stringify(historyItems));
+      hist();
+    }
+    function filteredTables() {
+      const key = $("#schemaFilter").value.trim().toLowerCase();
+      if (!key) return latestSchema.tables || [];
+      return (latestSchema.tables || []).filter(t => {
+        const cols = (t.columns || []).map(c => c.name).join(" ").toLowerCase();
+        return t.name.toLowerCase().includes(key) || cols.includes(key);
+      });
+    }
+    function schema(tables) {
+      $("#schemaCount").textContent = `${tables.length} 张表`;
+      const rows = filteredTables();
+      $("#schemaBody").innerHTML = rows.length
+        ? rows.map(t => `<tr data-table="${escapeHtml(t.name)}"><td>${escapeHtml(t.name)}</td><td>${t.column_count}</td><td>${t.row_count == null ? "-" : Number(t.row_count).toLocaleString()}</td></tr>`).join("")
+        : '<tr><td colspan="3" class="hint">当前条件下没有表。</td></tr>';
+    }
+    function renderTable(cols, rows, maxRows) {
+      if (!cols.length) return '<div class="empty">没有可展示的数据。</div>';
+      const clipped = rows.slice(0, maxRows || rows.length);
+      return `<div class="scroll"><table><thead><tr>${cols.map(c => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>${clipped.map(r => `<tr>${cols.map(c => `<td>${escapeHtml(r[c] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    }
+    function renderImportFiles() {
+      const mode = $("#importMode").value;
+      if (!latestSqlFiles.length) {
+        $("#fileInfo").textContent = "尚未选择 SQL 文件。";
+        $("#importFiles").className = "empty";
+        $("#importFiles").innerHTML = "选择 .sql 文件后，这里会显示待导入文件清单。";
+        $("#runImport").disabled = true;
+        return;
+      }
+      latestSqlFiles.sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+      $("#fileInfo").textContent = mode === "database"
+        ? `整库导入模式：${latestSqlFiles.length} 个 SQL 文件将按文件名顺序执行。`
+        : `单文件导入模式：将导入 ${latestSqlFiles[0].name}。`;
+      const files = mode === "database" ? latestSqlFiles : latestSqlFiles.slice(0, 1);
+      $("#importFiles").className = "file-list";
+      $("#importFiles").innerHTML = files.map((f, i) => `<div><span>${i + 1}. ${escapeHtml(f.name)}</span><span>${(f.size / 1024).toFixed(1)} KB</span></div>`).join("");
+      $("#runImport").disabled = !files.length;
+    }
+    $("#connectBtn").onclick = async () => {
+      $("#connectBtn").disabled = true;
+      $("#connectBtn").textContent = "连接中...";
+      try {
+        const c = cfg();
+        const a = await post("/api/mysql/test-connection", c);
+        const s = await post("/api/mysql/schema", c);
+        latestSchema = s;
+        connected = true;
+        schema(s.tables || []);
+        setPill($("#connText"), "已连接", "ok");
+        setPill($("#dbText"), a.database, "ok");
+        $("#analyzeBtn").disabled = false;
+        $("#review").className = "strip ok";
+        $("#review").innerHTML = `<span class="status-dot ok"></span><span>MySQL 连接成功，已读取 ${(s.tables || []).length} 张表。</span>`;
+        $("#connectBtn").textContent = "重新读取 Schema";
+      } catch (e) {
+        $("#review").className = "strip err";
+        $("#review").innerHTML = `<span class="status-dot err"></span><span>${escapeHtml(e.message)}</span>`;
+        setPill($("#connText"), "连接失败", "err");
+        $("#connectBtn").textContent = "检查连接配置";
+      } finally {
+        $("#connectBtn").disabled = false;
+      }
+    };
+    function sqlId(name) {
+      return "`" + String(name).replace(/`/g, "``") + "`";
+    }
+    function tableByName(names) {
+      const tables = latestSchema.tables || [];
+      return tables.find(t => names.some(n => t.name.toLowerCase().includes(n))) || tables[0] || null;
+    }
+    function columnsOf(table) {
+      return (table?.columns || []).map(c => ({ ...c, lower: c.name.toLowerCase(), typeLower: String(c.type || "").toLowerCase() }));
+    }
+    function isNumericColumn(c) {
+      return /int|decimal|double|float|numeric|real|number/.test(c.typeLower) && !/id$|_id$/.test(c.lower);
+    }
+    function isDateColumn(c) {
+      return /date|time|timestamp|datetime|year/.test(c.typeLower) || /date|time|day|month|year|日期|时间/.test(c.lower);
+    }
+    function pickAnalysisParts(q) {
+      const paymentLike = /销售|金额|支付|消费|收入|营收|订单|payment|amount|sales|revenue/i.test(q);
+      const customerLike = /客户|用户|会员|customer|user/i.test(q);
+      const table = tableByName(paymentLike ? ["payment", "order", "sales", "revenue", "fact"] : customerLike ? ["customer", "user", "member"] : []);
+      const cols = columnsOf(table);
+      const dateCol = cols.find(c => isDateColumn(c)) || cols.find(c => /created|updated/.test(c.lower));
+      const amountCol = cols.find(c => /amount|price|sales|revenue|total|金额|收入|销售/.test(c.lower) && isNumericColumn(c)) || cols.find(isNumericColumn) || cols.find(c => /int|decimal|double|float/.test(c.typeLower));
+      const dimensionCol = cols.find(c => /customer|user|name|category|type|region|city|country|staff|store|product/.test(c.lower) && !isDateColumn(c)) || cols.find(c => !isNumericColumn(c) && !isDateColumn(c)) || cols.find(c => /id$|_id$/.test(c.lower)) || cols[0];
+      return { table, cols, dateCol, amountCol, dimensionCol };
+    }
+    function missingSchemaAnalysis() {
+      return {
+        analysis_type: "detail_query",
+        result_type: "table",
+        suggested_chart: "none",
+        sql: "",
+        summary: ["请先读取 MySQL Schema。没有真实表结构时，系统不会再用固定示例表生成可能错误的 SQL。"]
+      };
+    }
+    function inferLocalAnalysis(q) {
+      const write = /删除|新增|修改|更新|建表|清空|drop|delete|update|insert|alter|truncate|create/i.test(q);
+      if (write) return { analysis_type: "data_operation", result_type: "explanation", suggested_chart: "none", sql: "", summary: ["数据分析工作台只支持只读查询，不执行增删改或建表操作。"] };
+      const trend = /趋势|每天|每日|每月|月份|日期|最近|变化|走势/i.test(q);
+      const rank = /排名|top|前\s*\d+|最高|最低|最多|最少/i.test(q);
+      const share = /占比|比例|份额|结构/i.test(q);
+      const detail = /明细|前\s*\d+\s*行|查看|列表/i.test(q);
+      const parts = pickAnalysisParts(q);
+      if (!parts.table) return missingSchemaAnalysis();
+      const table = sqlId(parts.table.name);
+      if (detail) {
+        return { analysis_type: "detail_query", result_type: "table", suggested_chart: "none", requires_total: false, sql: `SELECT *\nFROM ${table}\nLIMIT 20;`, summary: ["未配置 DeepSeek API Key，当前根据真实 Schema 生成明细查询。"] };
+      }
+      if (trend) {
+        if (!parts.dateCol || !parts.amountCol) return { analysis_type: "trend_analysis", result_type: "table", suggested_chart: "none", sql: "", summary: [`${parts.table.name} 表缺少可识别的日期列或数值列，无法可靠生成趋势 SQL。`] };
+        const date = sqlId(parts.dateCol.name), amount = sqlId(parts.amountCol.name);
+        return {
+          analysis_type: "trend_analysis",
+          result_type: "table_and_chart",
+          suggested_chart: "line_chart",
+          requires_total: false,
+          sql: `SELECT\n  DATE(${date}) AS day,\n  SUM(${amount}) AS total_value\nFROM ${table}\nWHERE ${date} >= (\n  SELECT MAX(DATE(${date})) - INTERVAL 29 DAY\n  FROM ${table}\n)\nGROUP BY DATE(${date})\nORDER BY day\nLIMIT 30;`,
+          summary: ["未配置 DeepSeek API Key，当前根据真实 Schema 生成最近 30 天趋势 SQL。"]
+        };
+      }
+      if (rank || share) {
+        if (!parts.dimensionCol || !parts.amountCol) return { analysis_type: rank ? "ranking_analysis" : "share_analysis", result_type: "table", suggested_chart: "none", sql: "", summary: [`${parts.table.name} 表缺少可识别的分组列或数值列，无法可靠生成排名/占比 SQL。`] };
+        const dim = sqlId(parts.dimensionCol.name), amount = sqlId(parts.amountCol.name);
+        return {
+          analysis_type: rank ? "ranking_analysis" : "share_analysis",
+          result_type: "table_and_chart",
+          suggested_chart: "bar_chart",
+          requires_total: true,
+          sql: `SELECT\n  ${dim} AS dimension,\n  SUM(${amount}) AS total_value\nFROM ${table}\nGROUP BY ${dim}\nORDER BY total_value DESC\nLIMIT 20;`,
+          summary: ["未配置 DeepSeek API Key，当前根据真实 Schema 生成分组汇总 SQL。"]
+        };
+      }
+      if (!parts.amountCol) return { analysis_type: "metric_query", result_type: "table", suggested_chart: "none", sql: `SELECT *\nFROM ${table}\nLIMIT 20;`, summary: ["未识别到数值指标列，已退回明细查询。"] };
+      return { analysis_type: "metric_query", result_type: "table", suggested_chart: "none", requires_total: true, sql: `SELECT\n  SUM(${sqlId(parts.amountCol.name)}) AS total_value\nFROM ${table}\nLIMIT 1;`, summary: ["未配置 DeepSeek API Key，当前根据真实 Schema 生成指标汇总 SQL。"] };
+    }
+    function renderAnalysis(a, mode) {
+      latestAnalysis = a;
+      const bad = !a.sql;
+      $("#classification").innerHTML = [
+        ["分析类型", cn(a.analysis_type)],
+        ["输出形式", cn(a.result_type)],
+        ["图表建议", cn(a.suggested_chart)],
+        ["执行状态", bad ? "已拒绝" : "已生成 SQL"]
+      ].map(([l, v]) => `<div class="card"><div class="label">${l}</div><div class="value">${escapeHtml(v)}</div></div>`).join("");
+      $("#sqlCode").textContent = a.sql || "-- 当前任务不生成可执行 SQL。";
+      $("#executeBtn").disabled = bad;
+      $("#copyBtn").disabled = bad;
+      $("#regenBtn").disabled = false;
+      $("#review").className = bad ? "strip" : "strip ok";
+      $("#review").innerHTML = bad ? `<span class="status-dot"></span><span>${escapeHtml(mode)}：未生成 SQL。</span>` : `<span class="status-dot ok"></span><span>${escapeHtml(mode)}：SQL 审核通过，执行前仍建议人工确认。</span>`;
+      $("#summary").innerHTML = (a.summary || ["分析完成。"]).map(x => `<li>${escapeHtml(x)}</li>`).join("");
+      addHist($("#question").value);
+    }
+    $("#analyzeBtn").onclick = async () => {
+      if (!$("#question").value.trim()) return;
+      addHist($("#question").value, "已提问");
+      if (!deepseek.apiKey) return renderAnalysis(inferLocalAnalysis($("#question").value), "本地预览");
+      $("#analyzeBtn").disabled = true;
+      $("#analyzeBtn").textContent = "分析中...";
+      $("#executeBtn").disabled = true;
+      $("#review").className = "strip";
+      $("#review").innerHTML = '<span class="status-dot"></span><span>正在请求 DeepSeek 生成分析 SQL...</span>';
+      try {
+        const r = await post("/api/deepseek/analyze", { ...deepseek, question: $("#question").value.trim(), schema: latestSchema });
+        renderAnalysis(r.analysis, `DeepSeek ${r.actual_model || r.requested_model}`);
+        setPill($("#modelText"), `DeepSeek ${r.actual_model || r.requested_model}`, "ok");
+      } catch (e) {
+        setPill($("#modelText"), "DeepSeek 请求失败", "err");
+        const fallback = inferLocalAnalysis($("#question").value);
+        renderAnalysis(fallback, "DeepSeek 失败，已切换本地规则");
+        $("#review").className = fallback.sql ? "strip ok" : "strip err";
+        $("#review").innerHTML = fallback.sql
+          ? `<span class="status-dot ok"></span><span>DeepSeek 请求失败：${escapeHtml(e.message)}；已使用本地规则重新生成 SQL。</span>`
+          : `<span class="status-dot err"></span><span>DeepSeek 请求失败：${escapeHtml(e.message)}；本地规则也无法在缺少 Schema 时生成可靠 SQL。</span>`;
+      } finally {
+        $("#analyzeBtn").disabled = false;
+        $("#analyzeBtn").textContent = "分析";
+      }
+    };
+    $("#regenBtn").onclick = () => $("#analyzeBtn").click();
+    function numericCols(cols, rows) {
+      return cols.filter(c => rows.some(r => r[c] !== "" && r[c] != null && !isNaN(Number(String(r[c]).replace(/,/g, "")))));
+    }
+    function dateCols(cols) { return cols.filter(c => /date|time|day|month|year|日期|时间/i.test(c)); }
+    function toNum(v) { const n = Number(String(v ?? "").replace(/,/g, "")); return isFinite(n) ? n : 0; }
+    function chart(cols, rows) {
+      const ns = numericCols(cols, rows);
+      if (!rows.length || !ns.length || rows.length < 2 || latestAnalysis?.suggested_chart === "none") return '<div class="empty">当前结果不足以生成有意义的业务图表。</div>';
+      const ds = dateCols(cols), x = ds[0] || cols.find(c => !ns.includes(c)) || cols[0], y = ns[0];
+      const data = rows.slice(0, 20).map(r => [String(r[x]), toNum(r[y])]).sort((a, b) => ds[0] ? a[0].localeCompare(b[0]) : b[1] - a[1]);
+      const type = ds[0] ? "折线图" : "柱状图";
+      return `<div class="chartbox" data-chart-rendered="true"><b>${type}：${escapeHtml(x)} / ${escapeHtml(y)}</b>${ds[0] ? line(data) : bar(data)}<div class="hint">图表由本次 SQL 查询结果实时生成，共使用 ${data.length} 个数据点。</div></div>`;
+    }
+    window.__testChartHtml = (cols, rows, analysis = { suggested_chart: "line_chart" }) => {
+      const previous = latestAnalysis;
+      latestAnalysis = analysis;
+      const html = chart(cols, rows);
+      latestAnalysis = previous;
+      return html;
+    };
+    function axisSvg(w, h, l, r, t, b, maxValue, xLabels) {
+      const plotW = w - l - r, plotH = h - t - b;
+      const ticks = [0, .25, .5, .75, 1];
+      const yAxis = ticks.map(k => {
+        const y = t + plotH - k * plotH;
+        const value = maxValue * k;
+        return `<line class="grid-line" x1="${l}" y1="${y}" x2="${w - r}" y2="${y}"/><text class="axis-label" x="${l - 8}" y="${y + 4}" text-anchor="end">${formatTick(value)}</text>`;
+      }).join("");
+      const labelIndexes = xLabels.length <= 6
+        ? xLabels.map((_, i) => i)
+        : [0, Math.floor((xLabels.length - 1) / 2), xLabels.length - 1];
+      const xAxis = labelIndexes.map(i => {
+        const x = l + (xLabels.length > 1 ? i * plotW / (xLabels.length - 1) : plotW / 2);
+        return `<line class="tick-line" x1="${x}" y1="${h - b}" x2="${x}" y2="${h - b + 5}"/><text class="axis-label" x="${x}" y="${h - 8}" text-anchor="middle">${escapeHtml(shortLabel(xLabels[i]))}</text>`;
+      }).join("");
+      return `${yAxis}<line class="axis-line" x1="${l}" y1="${t}" x2="${l}" y2="${h - b}"/><line class="axis-line" x1="${l}" y1="${h - b}" x2="${w - r}" y2="${h - b}"/>${xAxis}`;
+    }
+    function formatTick(value) {
+      if (value >= 1000000) return (value / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+      if (value >= 1000) return (value / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+      return Number(value.toFixed(1)).toLocaleString();
+    }
+    function shortLabel(value) {
+      const text = String(value ?? "");
+      return text.length > 10 ? text.slice(0, 9) + "…" : text;
+    }
+    function line(data) {
+      const w = 520, h = 230, l = 50, r = 18, t = 18, b = 38, m = Math.max(...data.map(x => x[1]), 1);
+      const plotW = w - l - r, plotH = h - t - b;
+      const step = data.length > 1 ? plotW / (data.length - 1) : 0;
+      const pts = data.map((row, i) => [l + i * step, t + plotH - row[1] / m * plotH]);
+      const path = pts.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" ");
+      return `<svg viewBox="0 0 ${w} ${h}">${axisSvg(w, h, l, r, t, b, m, data.map(x => x[0]))}<path class="line" d="${path}"/>${pts.map((p, i) => `<circle class="point hover-mark" data-tip="${escapeHtml(data[i][0])}：${data[i][1].toLocaleString()}" cx="${p[0]}" cy="${p[1]}" r="4"/>`).join("")}</svg>`;
+    }
+    function bar(data) {
+      const w = 520, h = 230, l = 50, r = 18, t = 18, b = 38, m = Math.max(...data.map(x => x[1]), 1);
+      const plotW = w - l - r, plotH = h - t - b, band = plotW / data.length, bw = Math.max(10, band * .66);
+      return `<svg viewBox="0 0 ${w} ${h}">${axisSvg(w, h, l, r, t, b, m, data.map(x => x[0]))}${data.map((row, i) => {
+        const bh = row[1] / m * plotH, x = l + i * band + (band - bw) / 2, y = t + plotH - bh;
+        return `<rect class="bar hover-mark" data-tip="${escapeHtml(row[0])}：${row[1].toLocaleString()}" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4"/>`;
+      }).join("")}</svg>`;
+    }
+    function buildSummary(cols, rows) {
+      if (!rows.length) return ["SQL 执行成功，但没有返回记录。"];
+      const ns = numericCols(cols, rows), items = [`本次查询返回 ${rows.length} 行、${cols.length} 个字段。`];
+      if (ns.length && latestAnalysis?.requires_total) {
+        const m = ns[0];
+        const total = rows.reduce((s, r) => s + toNum(r[m]), 0);
+        items.push(`${m} 汇总值为 ${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}，可以作为本次业务问题的核心规模判断。`);
+      }
+      if (ns.length) {
+        const m = ns[0], sorted = [...rows].sort((a, b) => toNum(b[m]) - toNum(a[m]));
+        const firstTextCol = cols.find(c => !ns.includes(c)) || cols[0];
+        items.push(`头部记录是 ${firstTextCol}=${sorted[0][firstTextCol] ?? "-"}，${m}=${toNum(sorted[0][m]).toLocaleString(undefined, { maximumFractionDigits: 2 })}，建议优先拆解其客户、地区、渠道或品类来源。`);
+        if (rows.length >= 5) {
+          const topFive = sorted.slice(0, 5).reduce((s, r) => s + toNum(r[m]), 0);
+          const total = sorted.reduce((s, r) => s + toNum(r[m]), 0) || 1;
+          items.push(`Top 5 贡献约占当前结果的 ${(topFive / total * 100).toFixed(1)}%，如果占比较高，后续应重点做头部对象的复购、留存和异常订单核查。`);
+        }
+      }
+      if (latestAnalysis?.analysis_type === "trend_analysis") items.push("建议继续比较环比/同比变化，并标记峰值日期对应的活动、渠道投放或库存变化。");
+      else if (latestAnalysis?.analysis_type === "ranking_analysis") items.push("建议将排名结果进一步按地区、时间段和产品维度交叉分析，判断高贡献是否稳定可复制。");
+      else items.push("建议把本次结果作为第一层筛选，再围绕异常值、头部贡献和低表现分组继续追问。");
+      return items;
+    }
+    $("#executeBtn").onclick = async () => {
+      $("#executeBtn").disabled = true;
+      $("#executeBtn").textContent = "执行中...";
+      try {
+        const r = await post("/api/sql/execute", { ...cfg(), sql: latestAnalysis.sql });
+        latestResult = { columns: r.columns, rows: r.rows };
+        $("#sqlCode").textContent = r.executed_sql;
+        $("#result").className = "result";
+        const chartHtml = chart(r.columns, r.rows);
+        $("#result").innerHTML = renderTable(r.columns, r.rows) + chartHtml;
+        $("#quality").innerHTML = `<li>SQL 已真实执行，返回 ${r.row_count} 行，${r.columns.length} 个字段。</li><li>当前只允许执行 SELECT 查询；无 LIMIT 时后端会自动追加 LIMIT 100。</li>`;
+        $("#summary").innerHTML = buildSummary(r.columns, r.rows).map(x => `<li>${escapeHtml(x)}</li>`).join("");
+        $("#review").className = "strip ok";
+        $("#review").innerHTML = '<span class="status-dot ok"></span><span>SQL 执行成功，结果已刷新。</span>';
+        [$("#csvBtn"), $("#xlsBtn"), $("#htmlBtn")].forEach(b => b.disabled = false);
+      } catch (e) {
+        $("#review").className = "strip err";
+        $("#review").innerHTML = `<span class="status-dot err"></span><span>${escapeHtml(e.message)}</span>`;
+      } finally {
+        $("#executeBtn").disabled = !latestAnalysis?.sql;
+        $("#executeBtn").textContent = "执行查询";
+      }
+    };
+    $("#schemaBody").onclick = e => {
+      const tr = e.target.closest("tr[data-table]");
+      if (tr) openDetail(tr.dataset.table);
+    };
+    async function openDetail(tableName) {
+      $("#detail").hidden = false;
+      $("#detailTitle").textContent = "表详情：" + tableName;
+      $("#detailBody").innerHTML = '<div class="empty">正在读取...</div>';
+      try {
+        const d = await post("/api/mysql/table-detail", { ...cfg(), table: tableName });
+        $("#detailBody").innerHTML = `<div><div class="head">字段结构 <span class="hint">${d.row_count == null ? "-" : Number(d.row_count).toLocaleString()} 行</span></div>${renderTable(["name","type","nullable","key","default","comment"], d.columns)}</div><div><div class="head">样例数据</div>${renderTable(d.sample_columns, d.sample_rows)}</div><div class="code"><div class="codebar">样例查询</div><pre>${escapeHtml(d.sample_sql)}</pre></div>`;
+      } catch (e) {
+        $("#detailBody").innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`;
+      }
+    }
+    $("#copyBtn").onclick = async () => {
+      await navigator.clipboard.writeText($("#sqlCode").textContent);
+      $("#copyBtn").textContent = "已复制";
+      setTimeout(() => $("#copyBtn").textContent = "复制", 1200);
+    };
+    $("#settingsBtn").onclick = () => $("#settings").hidden = false;
+    $("#closeSettings").onclick = () => $("#settings").hidden = true;
+    $("#saveSettings").onclick = () => {
+      deepseek = { apiKey: $("#apiKey").value.trim(), baseUrl: normalizeApiBase($("#apiBase").value), model: $("#apiModel").value.trim() || "deepseek-chat" };
+      localStorage.setItem("ai-data-analyst-deepseek", JSON.stringify(deepseek));
+      $("#apiBase").value = deepseek.baseUrl;
+      $("#apiModel").value = deepseek.model;
+      setPill($("#modelText"), deepseek.apiKey ? "DeepSeek 已配置" : "DeepSeek 未配置", deepseek.apiKey ? "ok" : "");
+      $("#runMode").value = deepseek.apiKey ? `有 API Key：调用 ${deepseek.model}` : "无 API Key：本地规则预览";
+      $("#settings").hidden = true;
+    };
+    $("#importBtn").onclick = () => { schema(latestSchema.tables || []); renderImportFiles(); $("#importModal").hidden = false; };
+    $("#closeImport").onclick = () => $("#importModal").hidden = true;
+    $("#importMode").onchange = renderImportFiles;
+    $("#sqlFiles").onchange = () => {
+      latestSqlFiles = Array.from($("#sqlFiles").files || []).filter(f => f.name.toLowerCase().endsWith(".sql"));
+      renderImportFiles();
+    };
+    $("#runImport").onclick = async () => {
+      $("#runImport").disabled = true;
+      $("#runImport").textContent = "导入中...";
+      try {
+        const mode = $("#importMode").value;
+        const files = (mode === "database" ? latestSqlFiles : latestSqlFiles.slice(0, 1));
+        const payloadFiles = [];
+        for (const file of files) payloadFiles.push({ name: file.name, content: await file.text() });
+        const r = await post("/api/mysql/import-uploaded-sql", { ...cfg(), confirmed: true, files: payloadFiles });
+        latestSchema = r.schema;
+        schema(r.schema.tables || []);
+        $("#importStatus").className = "strip ok";
+        $("#importStatus").innerHTML = `<span class="status-dot ok"></span><span>导入完成：已执行 ${r.imported.length} 个 SQL 文件，Schema 已刷新。</span>`;
+      } catch (e) {
+        $("#importStatus").className = "strip err";
+        $("#importStatus").innerHTML = `<span class="status-dot err"></span><span>${escapeHtml(e.message)}</span>`;
+      } finally {
+        $("#runImport").textContent = "开始导入";
+        renderImportFiles();
+      }
+    };
+    $("#schemaFilter").oninput = () => schema(latestSchema.tables || []);
+    $("#history").onclick = e => {
+      const btn = e.target.closest("button");
+      if (btn) {
+        const strong = btn.querySelector("strong");
+        $("#question").value = strong ? strong.textContent : btn.textContent;
+        $("#question").focus();
+      }
+    };
+    document.onmousemove = e => {
+      const m = e.target.closest(".hover-mark");
+      if (!m) { $("#tip").hidden = true; return; }
+      $("#tip").textContent = m.dataset.tip;
+      $("#tip").style.left = e.clientX + "px";
+      $("#tip").style.top = e.clientY + "px";
+      $("#tip").hidden = false;
+    };
+    function csvText() {
+      const quote = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      return latestResult.columns.map(quote).join(",") + "\n" + latestResult.rows.map(r => latestResult.columns.map(c => quote(r[c])).join(",")).join("\n");
+    }
+    function download(name, content, type) {
+      const blob = new Blob([content], { type }), url = URL.createObjectURL(blob), a = document.createElement("a");
+      a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
+    }
+    $("#csvBtn").onclick = () => download("analysis-result.csv", csvText(), "text/csv;charset=utf-8");
+    $("#xlsBtn").onclick = () => download("analysis-result.xls", csvText(), "application/vnd.ms-excel;charset=utf-8");
+    function buildReportHtml(reportResult = latestResult) {
+      const rows = reportResult.rows || [];
+      const cols = reportResult.columns || [];
+      const chartMarkup = chart(cols, rows);
+      const resultTable = cols.length
+        ? `<div class="table-wrap"><table><thead><tr>${cols.map(c => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${cols.map(c => `<td>${escapeHtml(r[c] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
+        : '<div class="empty-report">SQL 执行成功，但没有返回查询结果。</div>';
+      const metric = `<div class="metric"><span>返回行数</span><strong>${rows.length}</strong></div><div class="metric"><span>字段数</span><strong>${cols.length}</strong></div><div class="metric"><span>数据库</span><strong>${escapeHtml($("#database").value || "-")}</strong></div>`;
+      return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>数据分析报告</title><style>
+*{box-sizing:border-box}body{margin:0;background:#eef2f6;color:#101828;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;overflow:hidden}
+.page{height:100vh;padding:14px;display:grid;grid-template-rows:auto 1fr;gap:12px}
+.top{background:#0f766e;color:white;border-radius:10px;padding:16px 18px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+h1{margin:0 0 6px;font-size:24px;line-height:1.2}.question{margin:0;color:#d9f4ee;line-height:1.45;max-height:42px;overflow:auto}
+.metrics{display:grid;grid-template-columns:repeat(3,140px);gap:10px}.metric{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);border-radius:8px;padding:10px}.metric span{display:block;color:#c7eee7;font-size:12px}.metric strong{font-size:20px}
+.grid{min-height:0;display:grid;grid-template-columns:minmax(520px,1.45fr) minmax(360px,.9fr);grid-template-rows:minmax(260px,1fr) minmax(190px,.72fr);gap:12px}
+.card{min-height:0;background:white;border:1px solid #dfe5ec;border-radius:10px;box-shadow:0 10px 24px rgba(15,23,42,.06);padding:14px;display:flex;flex-direction:column}
+.card h2{font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px}.icon{width:22px;height:22px;border-radius:6px;background:#e7f5f2;color:#0f766e;display:inline-grid;place-items:center;font-size:13px}
+.result-card{grid-row:1 / 3}.split{min-height:0;display:grid;grid-template-rows:minmax(190px,.9fr) minmax(170px,.8fr);gap:12px;flex:1}.chartbox{min-height:0;border:1px solid #e4e7ec;border-radius:8px;background:#fbfcfd;padding:10px;display:flex;flex-direction:column}.chartbox svg{height:190px;min-height:150px}.line{fill:none;stroke:#0f766e;stroke-width:3}.point{fill:#fff;stroke:#0f766e;stroke-width:2}.bar{fill:#0f766e}.axis-line{stroke:#98a2b3;stroke-width:1.2}.grid-line{stroke:#e4e7ec;stroke-width:1}.tick-line{stroke:#98a2b3;stroke-width:1}.axis-label{fill:#667085;font-size:10px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+.table-wrap{min-height:0;overflow:auto;border:1px solid #e4e7ec;border-radius:8px}table{border-collapse:separate;border-spacing:0;width:100%;font-size:12px;background:white}th,td{border-bottom:1px solid #e4e7ec;padding:8px 9px;text-align:left;white-space:nowrap}th{position:sticky;top:0;background:#f9fafb;color:#475467;z-index:1}
+.sql{flex:1;min-height:0;background:#0f172a;color:#dbeafe;border-radius:8px;padding:12px;white-space:pre-wrap;overflow:auto;font:12px/1.55 Consolas,"Cascadia Mono",monospace}
+ul{margin:0;padding-left:20px;line-height:1.65;overflow:auto}.empty-report{border:1px dashed #cbd5e1;border-radius:8px;padding:24px;text-align:center;color:#667085}.hint{color:#667085;font-size:12px;margin-top:6px}.report-tip{position:fixed;display:none;z-index:20;background:#111827;color:white;border-radius:7px;padding:7px 9px;font-size:12px;pointer-events:none;box-shadow:0 10px 24px rgba(15,23,42,.18)}
+@media(max-width:900px){body{overflow:auto}.page{height:auto}.top,.grid{display:block}.metrics{grid-template-columns:1fr;margin-top:12px}.card{margin-bottom:12px}.result-card{height:620px}.sql{max-height:220px}}
+</style></head><body><main class="page"><section class="top"><div><h1>数据分析报告</h1><p class="question">${escapeHtml($("#question").value || "未填写业务问题")}</p></div><div class="metrics">${metric}</div></section><section class="grid"><section class="card result-card"><h2><span class="icon">▦</span>查询结果</h2><div class="split"><div>${chartMarkup}</div>${resultTable}</div></section><section class="card"><h2><span class="icon">SQL</span>执行 SQL</h2><pre class="sql">${escapeHtml($("#sqlCode").textContent)}</pre></section><section class="card"><h2><span class="icon">✓</span>数据质量</h2><ul>${$$("#quality li").map(x => `<li>${escapeHtml(x.innerText)}</li>`).join("")}</ul></section><section class="card"><h2><span class="icon">↗</span>业务建议</h2><ul>${$$("#summary li").map(x => `<li>${escapeHtml(x.innerText)}</li>`).join("")}</ul></section></section></main><div id="reportTip" class="report-tip"></div><script>const tip=document.getElementById('reportTip');document.addEventListener('mousemove',e=>{const mark=e.target.closest('.hover-mark');if(!mark){tip.style.display='none';return;}tip.textContent=mark.getAttribute('data-tip')||'';tip.style.left=e.clientX+12+'px';tip.style.top=e.clientY-30+'px';tip.style.display='block';});<\/script></body></html>`;
+    }
+    window.buildReportHtml = buildReportHtml;
+    $("#htmlBtn").onclick = () => download("analysis-report.html", buildReportHtml(), "text/html;charset=utf-8");
+    [$("#settings"), $("#detail"), $("#importModal")].forEach(m => m.onclick = e => { if (e.target === m) m.hidden = true; });
+    $("#apiKey").value = deepseek.apiKey || "";
+    $("#apiBase").value = deepseek.baseUrl;
+    $("#apiModel").value = deepseek.model;
+    $("#runMode").value = deepseek.apiKey ? `有 API Key：调用 ${deepseek.model}` : "无 API Key：本地规则预览";
+    setPill($("#modelText"), deepseek.apiKey ? "DeepSeek 已配置" : "DeepSeek 未配置", deepseek.apiKey ? "ok" : "");
+    renderCards();
+    hist();
+  </script>
+</body>
+</html>
